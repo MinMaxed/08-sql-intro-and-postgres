@@ -11,13 +11,14 @@ const app = express();
 // Windows and Linux users: You should have retained the user/password from the pre-work for this course.
 // Your OS may require that your conString is composed of additional information including user and password.
 // const conString = 'postgres://USER:PASSWORD@HOST:PORT/DBNAME';
-const conString = 'postgres://postgres:1111@host:5432/kilovolt';
+
+// const conString = 'postgres://postgres:1111@host:5432/kilovolt';
+
 
 // Mac:
-// const conString = 'postgres://localhost:5432';
+const conString = 'postgres://localhost:5432';
 
-const client = new pg.Client();
-
+const client = new pg.Client(conString);
 // REVIEW: Use the client object to connect to our DB.
 client.connect();
 
@@ -26,6 +27,7 @@ client.connect();
 app.use(express.json());
 app.use(express.urlencoded());
 app.use(express.static('./public'));
+
 
 
 // REVIEW: Routes for requesting HTML resources
@@ -40,7 +42,7 @@ app.get('/new', (request, response) => {
 app.get('/articles', (request, response) => {
   // COMMENT: What number(s) of the full-stack-diagram.png image correspond to the following line of code? Which method of article.js is interacting with this particular piece of `server.js`? What part of CRUD is being enacted/managed by this particular piece of code?
   // #3 & #5 of the .png. the fetchAll method. Read of CRUD because 'get'.
-  client.query('')
+  client.query('SELECT * FROM articles')
     .then(function (result) {
       response.send(result.rows);
     })
@@ -51,7 +53,7 @@ app.get('/articles', (request, response) => {
 
 app.post('/articles', (request, response) => {
   // COMMENT: What number(s) of the full-stack-diagram.png image correspond to the following line of code? Which method of article.js is interacting with this particular piece of `server.js`? What part of CRUD is being enacted/managed by this particular piece of code?
-  // #1, #2 & #3 of the .png. The .insertRecord method. this is Create of CRUD.
+  // #3 of the .png. The .insertRecord method. this is Create of CRUD.
   client.query(
     `INSERT INTO
     articles(title, author, "authorUrl", category, "publishedOn", body)
@@ -78,7 +80,7 @@ app.put('/articles/:id', (request, response) => {
   // COMMENT: What number(s) of the full-stack-diagram.png image correspond to the following line of code? Which method of article.js is interacting with this particular piece of `server.js`? What part of CRUD is being enacted/managed by this particular piece of code?
   // #3 & #4 of the .png. The .updateRecord method. Update of CRUD.
   client.query(
-    ` `, []
+    `UPDATE FROM articles WHERE article_id=$1;`, [request.params.id]
   )
     .then(() => {
       response.send('update complete')
@@ -107,7 +109,7 @@ app.delete('/articles', (request, response) => {
   // COMMENT: What number(s) of the full-stack-diagram.png image correspond to the following line of code? Which method of article.js is interacting with this particular piece of `server.js`? What part of CRUD is being enacted/managed by this particular piece of code?
   //  #3 of the .png. The .deleteRecord method. the Delete of CRUD.
   client.query(
-    ''
+    'DROP TABLE articles;'
   )
     .then(() => {
       response.send('Delete complete')
@@ -144,7 +146,7 @@ function loadArticles() {
               articles(title, author, "authorUrl", category, "publishedOn", body)
               VALUES ($1, $2, $3, $4, $5, $6);
             `,
-            [ele.title, ele.author, ele.authorUrl, ele.category, ele.publishedOn, ele.body]
+              [ele.title, ele.author, ele.authorUrl, ele.category, ele.publishedOn, ele.body]
             )
           })
         })
